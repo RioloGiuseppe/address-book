@@ -1,0 +1,7 @@
+npm install String.prototype.startsWith
+npm install express
+npm install multer
+npm install body-parser
+npm install fs
+npm install path
+pause

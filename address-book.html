@@ -1,0 +1,305 @@
+<html ng-app="rubrica">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<title>Rubrica</title>
+		<script src="js/jquery-2.1.4.min.js"></script>
+		<script src="js/angular.min.js"></script>
+		<script src="js/angular-resource.min.js"></script>
+		<script src="js/angular-route.min.js"></script>
+		
+		<script src="js/bootstrap.min.js"></script>
+		<script src="js/angularApp.js"></script>
+		<script type="text/javascript" src="//maps.google.com/maps/api/js?sensor=true"></script>
+		<script src="js/gmaps.js"></script>
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<link id="theme-link" rel="stylesheet" href="css/theme/default.min.css">
+		<link rel="stylesheet" href="css/rubrica.css">
+		<script>
+			var hhh;
+			window.onload=function(){
+				$("#theme-selector").on('change', function() {
+					$("#theme-link")[0].href=this.value;
+				});
+				
+				$("img[id='image-h']").on('click', function() {
+					$("input[id='imguploader']").click();
+				});
+				$("input[id='imguploader']").on('change', function() {
+					$("input[id='img-uploader-sub']").click();
+				});
+				$('#img-uploader-sub').click(function() {
+					var hhh = $('#form-img')[0];
+					var formData = new FormData($('#form-img')[0]);
+					$.ajax({
+						url: '/upload',  //Server script to process data
+						type: 'POST',
+						data: formData,
+						success: function(data){
+							user.image=data;
+							angular.element(document.getElementById("UserController")).scope().$apply();
+							hhh.reset();
+						},
+						error: function(err){
+							alert("Si è verificato un errore");
+						},
+						contentType: false,
+						processData: false
+					});
+				});
+				
+				$("button[id='btn-import']").on('click', function() {
+					$("input[id='file-import']").click();
+				});
+				$("input[id='file-import']").on('change', function() {
+					$("input[id='btn-import-go']").click();
+				});
+				$('#btn-import-go').click(function() {
+				    var hhh = $('#form-import')[0];
+					var formData = new FormData(hhh);
+					$.ajax({
+						url: '/import',  //Server script to process data
+						type: 'POST',
+						data: formData,
+						success: function(data){
+							hhh.reset();
+							location.reload();
+						},
+						error: function(err){
+							alert("Si è verificato un errore");
+						},
+						contentType: false,
+						processData: false
+					});
+				});
+				
+				
+				
+				$("#map-box").on('shown.bs.modal', function(o){
+					SetMap(this.getElementsByClassName("modal-title")[0].innerText);
+				});
+			};
+		</script>
+	</head>
+	<body>
+		<div>
+			<div id="ContactsController" ng-controller="ContactsController as conts">
+				<nav class="navbar navbar-default">
+				  <div class="container-fluid">
+					<div class="navbar-header">
+						<a class="logo" href="/"></a>
+					</div>
+					<form class="navbar-form navbar-left" id="form-import" enctype="multipart/form-data" >
+						<div class="form-group">
+							<input type="text" class="form-control" placeholder="Cerca" ng-model="conts.searchbox" title="Inserisci nome, cognome o parti di essi.">
+							<button class="btn btn-default" style="padding-top: 3;padding-bottom: 3;" title="Cerca" ng-click="conts.search()" >
+								<div class="search"></div>
+							</button>
+							<button class="btn btn-default" style="padding-top: 3;padding-bottom: 3;" title="Nuovo" ng-click="conts.add();">
+								<div class="new"></div>
+							</button>
+							<button id="btn-import" class="btn btn-default" style="padding-top: 3;padding-bottom: 3;" title="Importa"><div class="import"></div></button>
+							<input type="file" id="file-import" name="imp" style="display:none" accept=".json"/>
+							<input id="btn-import-go" type="button" style="display:none;"/>							
+						</div>
+					</form>
+					  <form class="navbar-form navbar-right">
+						<select id="theme-selector" class="form-control">
+							<option value="css/theme/default.min.css">Default</option>
+							<option value="css/theme/cerulean.min.css">Cerulean</option>
+							<option value="css/theme/cosmo.min.css">Cosmo</option>
+							<option value="css/theme/cyborg.min.css">Cyborg</option>
+							<option value="css/theme/darkly.min.css">Darkly</option>
+							<option value="css/theme/flatly.min.css">Flatly</option>
+							<option value="css/theme/journal.min.css">Journal</option>
+							<option value="css/theme/lumen.min.css">Lumen</option>
+							<option value="css/theme/paper.min.css">Paper</option>
+							<option value="css/theme/readable.min.css">Readable</option>
+							<option value="css/theme/sandstone.min.css">Sandstone</option>
+							<option value="css/theme/simplex.min.css">Simplex</option>
+							<option value="css/theme/slate.min.css">Slate</option>
+							<option value="css/theme/spacelab.min.css">Spacelab</option>
+							<option value="css/theme/superhero.min.css">Superhero</option>
+							<option value="css/theme/united.min.css">United</option>
+							<option value="css/theme/yeti.min.css">Yeti</option>
+						  </select>
+					  </form>
+				  </div>
+				</nav>
+				<div class="col-md-3" >
+					<div class="panel panel-default" style="width:100%;">
+						<div class="panel-heading">
+						<b>Contatti</b>
+						<a style="float:right;" ng-href="/export/rubrica.json?matr=">Esporta</a>
+						</div>
+						<div class="panel-body" style="padding:0px;display:flex;overflow-y:auto;height:78%;overflow-x:hidden;">
+							<ul style="padding:3 5 0 5;width:100%">
+								<li class="user-item-listbox-{{contact.isSelected}}" ng-repeat="contact in conts.contacts">
+									<label style="margin:0px;padding:2px;width:100%">
+										<input style="display: none;" type="checkbox" ng-model="contact.isSelected" ng-change="conts.select(contact)";>
+										<table style="width:100%;">
+											<tr>
+												<td style="width:90px"><b>Nome:</b></td>
+												<td>{{contact.name}}</td> 
+											</tr>
+											<tr>
+												<td style="width:90px"><b>Cognome:</b></td>
+												<td>{{contact.surname}}</td> 
+											</tr>
+										</table>
+									</label>									
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-9">
+				<div id="UserController" ng-controller="UserController as user"  class="panel panel-default" style="width:100%;">
+					<div class="panel-heading">
+						<b>Dettagli</b>
+						<a style="float:right;" ng-href="/export/{{user.data().name}}.{{user.data().surname}}.json?matr={{user.data().matricola}}" ng-show="user.current().isNotNew">Esporta</a>
+					</div>
+					<div class="panel-body">
+						<div class="row" >
+							<div class="col-md-2" style="width:150px">
+								<form enctype="multipart/form-data" id="form-img">
+									<img id="image-h" ng-src="{{user.data().image}}" style="width: 140;height: 120;display: flex;" class="thumbnail"/>
+									<input type="file" id="imguploader" name="image" style="display:none" accept="image/*" ng-disabled="!user.current()"/>
+									<input id="img-uploader-sub" type="button" style="display:none;"/>
+								</form>
+							</div>
+							<div class="col-md-5" >
+								<div class="form-group">
+									<label class="control-label" for="focusedInput">Nome:</label>
+									<input class="form-control" id="focusedInput" type="text" ng-model="user.data().name" ng-disabled="!user.current()">
+									<label class="control-label" for="focusedInput">Data di nascita:</label>
+									<input class="form-control" id="focusedInput" type="text" ng-model="user.data().datanascita" ng-disabled="!user.current()">
+								</div>
+							</div>
+							<div class="col-md-5" >
+								<div class="form-group">
+									<label class="control-label" for="focusedInput">Cognome:</label>
+									<input class="form-control" id="focusedInput" type="text" ng-model="user.data().surname" ng-disabled="!user.current()">
+									<label class="control-label" for="focusedInput">Matricola:</label>
+									<input class="form-control" id="focusedInput" type="text" ng-model="user.data().matricola" ng-readonly="user.current().isNotNew" ng-disabled="!user.current()">
+								</div>
+							</div>
+						</div>
+						<div id="ListsController" ng-controller="ListsController as lists" class="row">
+							<div class="col-md-4" >
+								<div class="form-group">
+									<label class="control-label" for="focusedInput">E-Mails:</label>
+									<a style="float:right;" href="" ng-click="lists.removeAllMails()" ng-show="user.current()">Elimina</a>
+									<ul class="listbox-small">
+										<li ng-repeat="mail in lists.mails()" style="width:100%">
+											<label title="{{tel.text}}" style="font-weight: normal;width:100%;display:flex;" class="remove-{{mail.remove}}">
+											<a class="mail-send" ng-href="mailto:{{mail.text}}"></a>
+											<input style="display: none;" id="ff" type="checkbox" ng-model="mail.remove">
+											<span style="display: block;overflow: hidden;word-wrap: normal;text-overflow: ellipsis">{{mail.text}}</span></label>								
+										</li>
+									</ul>
+									<form ng-submit="lists.addMail()">
+										<div class="input-group">
+											<input type="email" name="input" class="form-control" ng-model="lists.mailAddr" required ng-disabled="!user.current()">
+											<span class="input-group-btn">
+											  <button class="btn btn-default" type="submit" value="add" ng-disabled="!user.current()">+</button>
+											</span>
+										</div>
+									</form>
+								</div>
+							</div>
+							<div class="col-md-4" >
+								<div class="form-group">
+									<label class="control-label" for="focusedInput">Telefoni:</label>
+									<a style="float:right;" href="" ng-click="lists.removeAllTels()" ng-show="user.current()">Elimina</a>
+									<ul class="listbox-small">
+										<li ng-repeat="tel in lists.tels()" style="width:100%">
+											<label title="{{tel.text}}" style="font-weight: normal;width:100%;display:flex;" class="remove-{{tel.remove}}" >
+											<a class="call"ng-href="callto:{{tel.text}}"></a>
+											<input style="display: none;" id="ff" type="checkbox" ng-model="tel.remove">
+											<span style="display: block;overflow: hidden;word-wrap: normal;text-overflow: ellipsis">{{tel.text}}</span></label>									
+										</li>
+									</ul>
+									<form ng-submit="lists.addTel()">
+										<div class="input-group">
+											<input type="input" name="input" class="form-control" ng-model="lists.tel" required ng-disabled="!user.current()">
+											<span class="input-group-btn">
+											  <button class="btn btn-default" type="submit" value="add" ng-disabled="!user.current()">+</button>
+											</span>
+										</div>
+									</form>
+								</div>
+							</div>
+							<div class="col-md-4" >
+								<div class="form-group">
+									<label class="control-label" for="focusedInput">Indirizzi:</label>
+									<a style="float:right;" href="" ng-click="lists.removeAllAddrs()" ng-show="user.current()">Elimina</a>
+									<ul class="listbox-small">
+										<li ng-repeat="addr in lists.addrs()" style="width:100%;" >
+											<label title="{{tel.text}}" style="font-weight: normal;width:100%;display:flex;" class="remove-{{addr.remove}}">
+											<a class="location" href="javascript:void(0);" ng-click="lists.openMap(addr.text);"></a>
+											<input style="display: none;" id="ff" type="checkbox" ng-model="addr.remove">
+											<span style="display: block;overflow: hidden;word-wrap: normal;text-overflow: ellipsis">{{addr.text}}</span></label>							
+										</li>
+									</ul>
+									<form ng-submit="lists.addAddr()">
+										<div class="input-group">
+											<input type="input" name="input" class="form-control" ng-model="lists.addr" required ng-disabled="!user.current()">
+											<span class="input-group-btn">
+											  <button class="btn btn-default" type="submit" value="add" ng-disabled="!user.current()">+</button>
+											</span>
+										</div>
+									</form>
+								</div>
+							</div>
+						</div>
+					</div>
+				
+				<div class="row" style="text-align: right;margin-bottom: 15px;margin-right: 15px;margin-top: -20px;">
+					<button type="submit" class="btn btn-default" title="Salva" onclick="saveOutsideController();" ng-disabled="!user.current()">
+						<div class="save"></div>
+					</button>
+					<button type="submit" class="btn btn-default" title="Elimina" onclick="removeOutsideController();" ng-disabled="!user.current()">
+						<div class="delete"></div>
+					</button>
+				</div>
+				</div>
+			</div>
+		</div>
+		
+		<div id="msg-box" class="modal fade">
+		  <div class="modal-dialog">
+			<div class="modal-content">
+			  <div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h4 class="modal-title"></h4>
+			  </div>
+			  <div class="modal-body">
+				<p></p>
+			  </div>
+			  <div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			  </div>
+			</div>
+		  </div>
+		</div>
+		<div id="map-box" class="modal fade" >
+		  <div class="modal-dialog">
+			<div class="modal-content">
+			  <div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h4 class="modal-title"></h4>
+			  </div>
+			  <div class="modal-body">
+				<div id="map" style="height:50%;width:100%;"></div>
+			  </div>
+			  <div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			  </div>
+			</div>
+		  </div>
+		</div>
+	</body>
+</html>
