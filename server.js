@@ -40,14 +40,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', function (req, res){
 	file = req.params.file;
-	var img = fs.readFileSync(__dirname + "\\rubrica.html");
+	var img = fs.readFileSync(__dirname + "\\address-book.html");
 	res.writeHead(200, {'Content-Type': 'text/html' });
 	res.end(img);
 
 });
-app.get('/rubrica', function (req, res){
+app.get('/address-book', function (req, res){
 	file = req.params.file;
-	var img = fs.readFileSync(__dirname + "\\rubrica.html");
+	var img = fs.readFileSync(__dirname + "\\address-book.html");
 	res.writeHead(200, {'Content-Type': 'text/html' });
 	res.end(img);
 
@@ -75,10 +75,10 @@ app.post('/save', function(req, res){
 	var u = users.filter(function(o){ if (o.matricola==req.body.matricola) return o});
 	if (u.length>0){
 		users[users.indexOf(u[0])]=req.body;
-		res.send("Le informazioni relative all'utente \"" + req.body.name + " " + req.body.surname+"\" sono state aggiornate.");
+		res.send({save:"upd"});
 	} else{
 		users.push(req.body);
-		res.send("L'utente \"" + req.body.name + " " + req.body.surname+"\" e' stato inserito nella lista contatti.");
+		res.send({save:"ins"});
 	}
 });
 
@@ -87,9 +87,9 @@ app.post('/remove', function(req, res){
 	var u = users.filter(function(o){ if (o.matricola==req.body.matr) return o});
 	if (u.length>0){
 		users.splice(users.indexOf(u[0]),1)
-		res.send({isRemoved:true,text:"L'utente \"" + u[0].name + " " + u[0].surname+"\" e' stato rimosso dalla lista contatti."});
+		res.send({isRemoved:true, remUser:u[0]});
 	} else{
-		res.send({isRemoved:false,text:"Non e' stato trovato alcun contatto con matricola: " + req.body.matr + "."});
+		res.send({isRemoved:false});
 	}
 });
 

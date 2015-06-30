@@ -1,4 +1,5 @@
 var user = {name:"",image:"user-pictures/user-placeholder.png",surname:"",matricola:"",datanascita:"",lists:{mails:[],tels:[],addrs:[]}};
+var lcld = {};
 var suser;
 angular.module('rubrica', [])
 .config( [
@@ -123,7 +124,10 @@ angular.module('rubrica', [])
 						});
 						user={name:"",image:"user-pictures/user-placeholder.png",surname:"",matricola:"",datanascita:"",lists:{mails:[],tels:[],addrs:[]}};
 					} 
-					msgBox("Rubrica - information", data.text);				
+					if (data.isRemoved)
+						msgBox(lcld.messageWarning, lcld.messageDeleteBodySuccess.applyData({name:data.remUser.name,surname:data.remUser.surname}));
+					else
+						msgBox(lcld.messageWarning, lcld.messageDeleteBodyError.applyData({id:o}));
 				})
 				.error(function(data, status, headers, config) {
 					// called asynchronously if an error occurs
@@ -135,7 +139,7 @@ angular.module('rubrica', [])
 	cuser.search = function(o){
 		var keys = cuser.searchbox.split(" ");
 		if (keys.length>2){
-			msgBox("Rubrica - warning!", "Non è possibile inserire più di due campi di ricerca!");
+			msgBox(lcld.messageWarning, lcld.messageSearchBody);
 		}else{
 			$http.post('/search',{query:keys})
 			.success(function(data, status, headers, config) {
@@ -163,7 +167,7 @@ angular.module('rubrica', [])
 				user={name:"",image:"user-pictures/user-placeholder.png",surname:"",matricola:"",datanascita:"",lists:{mails:[],tels:[],addrs:[]}};
 			}
 		else
-			msgBox("Rubrica - warning!", "E' possibile inserire solo un contatto per volta");
+			msgBox(lcld.messageWarning, messageAddWarning);
 	};
 	cuser.save = function(){
 		var u = {name:user.name,
@@ -177,7 +181,10 @@ angular.module('rubrica', [])
 		u.lists.tels = user.lists.tels.map(function(o){ return o.text});
 		$http.post('/save',u)
 		.success(function(data, status, headers, config) {
-			msgBox("Rubrica - information", data);
+			if (data.save == "ins")
+				msgBox(lcld.messageInfo, lcld.messageSaveBodyInsert.applyData({name:u.name,surname:u.surname}));
+			else
+				msgBox(lcld.messageInfo, lcld.messageSaveBodyUpdate.applyData({name:u.name,surname:u.surname}));
 		})
 		.error(function(data, status, headers, config) {
 			// called asynchronously if an error occurs
@@ -187,6 +194,16 @@ angular.module('rubrica', [])
 			if(cuser.contacts[i].isSelected==true)
 				cuser.contacts[i].isNotNew=true;
 	};	
+})
+.controller("LocaleController", function($scope, $http){
+	var locs = this;
+	locs.language="en";
+	locs.change = function(){
+		lcld = new Locale(locs.language).data;
+		locs.data = lcld;
+	} 
+	lcld = new Locale(locs.language).data;
+	locs.data = lcld;
 });
 
 function saveOutsideController(){
@@ -197,7 +214,7 @@ function removeOutsideController(){
 }
 function msgBox(head, message){
 	$("#msg-box h4").text(head);
-    $("#msg-box p").text(message);
+    $("#msg-box p").html(message);
     $("#msg-box").modal();
 }
 function mapBox(head){
@@ -226,7 +243,7 @@ function SetMap(addr){
 				});
 			} else{
 				$("#map").height("50px");
-				$("#map").html("Non è stato possibile trovare l'indirizzo <i>" + addr.trim() + "</i> sulla mappa.");
+				$("#map").html(lcld.mapWarningapplyData({addr:addr.trim()}));
 			}
 		}
 	});
