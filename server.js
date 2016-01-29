@@ -1,4 +1,4 @@
-require('String.prototype.startsWith');
+require('string.prototype.startswith');
 var express = require('express');
 var multer = require('multer');
 var bodyParser = require('body-parser');
@@ -34,8 +34,9 @@ app.use(express.static('./'));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // parse multipart/form-data
-app.use(multer());
+//app.use(multer({ dest: './uploads' }));
 
+var upload = multer({ dest: './uploads' });
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', function (req, res){
