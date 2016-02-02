@@ -1,0 +1,63 @@
+var hhh;
+window.onload=function(){
+	$("#theme-selector").on('change', function() {
+		$("#theme-link")[0].href=this.value;
+	});
+	
+	$("img[id='image-h']").on('click', function() {
+		$("input[id='imguploader']").click();
+	});
+	$("input[id='imguploader']").on('change', function() {
+		$("input[id='img-uploader-sub']").click();
+	});
+	$('#img-uploader-sub').click(function() {
+		var hhh = $('#form-img')[0];
+		var formData = new FormData($('#form-img')[0]);
+		$.ajax({
+			url: '/upload',  //Server script to process data
+			type: 'POST',
+			data: formData,
+			success: function(data){
+				user.image=data;
+				angular.element(document.getElementById("UserController")).scope().$apply();
+				hhh.reset();
+			},
+			error: function(err){
+				alert("Si è verificato un errore");
+			},
+			contentType: false,
+			processData: false
+		});
+	});
+	
+	$("button[id='btn-import']").on('click', function() {
+		$("input[id='file-import']").click();
+	});
+	$("input[id='file-import']").on('change', function() {
+		$("input[id='btn-import-go']").click();
+	});
+	$('#btn-import-go').click(function() {
+		var hhh = $('#form-import')[0];
+		var formData = new FormData(hhh);
+		$.ajax({
+			url: '/import',  //Server script to process data
+			type: 'POST',
+			data: formData,
+			success: function(data){
+				hhh.reset();
+				location.reload();
+			},
+			error: function(err){
+				alert("Si è verificato un errore");
+			},
+			contentType: false,
+			processData: false
+		});
+	});
+	
+	
+	
+	$("#map-box").on('shown.bs.modal', function(o){
+		SetMap(this.getElementsByClassName("modal-title")[0].innerText);
+	});
+};
